@@ -1,2 +1,2 @@
-bottle
-youtube_dl
+bottle==0.12.10
+youtube-dl==2016.11.2
