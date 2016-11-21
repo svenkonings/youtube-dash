@@ -4,7 +4,7 @@ from sys import argv
 
 from bottle import response, route, run
 from youtube_dl import YoutubeDL
-from youtube_dl.compat import compat_parse_qs, compat_urllib_parse
+from youtube_dl.compat import compat_parse_qs, compat_urllib_parse_urlencode
 from youtube_dl.extractor import YoutubeIE
 
 
@@ -19,7 +19,7 @@ class Extractor(YoutubeIE):
     def _real_extract(self, video_id):
         url = 'https://www.youtube.com/embed/%s' % video_id
         webpage = self._download_webpage(url, video_id, 'Downloading embed webpage')
-        data = compat_urllib_parse.urlencode({
+        data = compat_urllib_parse_urlencode({
             'video_id': video_id,
             'eurl': 'https://youtube.googleapis.com/v/' + video_id,
             'sts': self._search_regex(r'"sts"\s*:\s*(\d+)', webpage, 'sts', default='')
@@ -36,7 +36,8 @@ class Extractor(YoutubeIE):
             dec_s = self._decrypt_signature(s, video_id, player_url)
             return '/signature/%s' % dec_s
 
-        return sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, dash_mpd)
+        mpd_url = sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, dash_mpd)
+        return self._download_webpage_handle(mpd_url, video_id, 'Downloading MPD manifest')[0]
 
 
 _extractor = Extractor(YoutubeDL())
@@ -44,7 +45,7 @@ _extractor = Extractor(YoutubeDL())
 
 @route('/youtube/<video_id>')
 def extract(video_id):
-    response.content_type = "text/plain"
+    response.content_type = "video/vnd.mpeg.dash.mpd"
     return _extractor.extract(video_id)
 
 
