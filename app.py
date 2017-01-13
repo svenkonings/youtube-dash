@@ -27,7 +27,7 @@ class Extractor(YoutubeIE):
         video_info_url = 'https://www.youtube.com/get_video_info?' + data
         video_info_webpage = self._download_webpage(video_info_url, video_id, 'Downloading video info webpage')
         video_info = compat_parse_qs(video_info_webpage)
-        dash_mpd = video_info.get('dashmpd')[0]
+        mpd_url = video_info.get('dashmpd')[0]
         player_url_json = self._search_regex(r'"assets":.+?"js":\s*("[^"]+")', webpage, 'JS player URL')
         player_url = loads(player_url_json)
 
@@ -36,8 +36,9 @@ class Extractor(YoutubeIE):
             dec_s = self._decrypt_signature(s, video_id, player_url)
             return '/signature/%s' % dec_s
 
-        mpd_url = sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, dash_mpd)
-        return self._download_webpage_handle(mpd_url, video_id, 'Downloading MPD manifest')[0]
+        mpd_url = sub(r'/s/([a-fA-F0-9\.]+)', decrypt_sig, mpd_url)
+        mpd = self._download_webpage(mpd_url, video_id, 'Downloading MPD manifest')
+        return mpd
 
 
 _extractor = Extractor(YoutubeDL())
