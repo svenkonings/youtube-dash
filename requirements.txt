@@ -1,2 +1,2 @@
 bottle==0.12.13
-youtube-dl==2017.2.4.1
+youtube-dl==2017.03.16
